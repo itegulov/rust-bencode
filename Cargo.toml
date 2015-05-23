@@ -1,4 +1,7 @@
 [package]
 name = "bencode"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Daniyar Itegulov <wibkwibk@gmail.com>"]
+
+[dependencies]
+rand = "0.3"

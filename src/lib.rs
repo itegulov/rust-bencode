@@ -16,13 +16,17 @@ use std::fmt::Error;
 ///
 /// Simple implementation.
 ///
-/// ```ignore
+/// ```rust
+/// use bencode::BElement;
+///
 /// struct BExample {
 ///     e: i8,
 /// }
 ///
 /// impl BElement<BExample> for BExample {
-///     //Implementation
+///     fn decode(encoded: &[u8]) -> Result<(usize, BExample), &'static str> {
+///         Err("No implementation, sorry")
+///     }
 /// }
 /// ```
 pub trait BElement<T> where T: BElement<T> {
@@ -84,7 +88,7 @@ impl BElement<BNumber> for BNumber {
     ///
     /// BNumber must begin with 'i' char and end with 'e' char.
     ///
-    /// ```
+    /// ```rust
     /// use bencode::BElement;
     /// use bencode::BNumber;
     /// assert_eq!((4, BNumber::new(300)),
@@ -95,38 +99,42 @@ impl BElement<BNumber> for BNumber {
     ///
     /// If it's not, then error is generated.
     ///
-    /// ```
+    /// ```rust
     /// use bencode::BElement;
     /// use bencode::BNumber;
     /// assert!(BNumber::decode("l300e".as_bytes()).is_err());
     /// ```
     /// 
-    /// Also error is generated, when number is too big for `i64`.
+    /// Also error is generated, when number isn't valid or is too big for `i64`.
     /// 
-    /// ```
+    /// ```rust
     /// use bencode::BElement;
     /// use bencode::BNumber;
     /// assert!(BNumber::decode("i400000000000000000000000000000000000000000000e".as_bytes()).is_err());
     /// ```
     fn decode(encoded: &[u8]) -> Result<(usize, BNumber), &'static str> {
-        match encoded[0] as char {
-            'i' => {
-                let mut i : usize = 1;
-                while i < encoded.len() && encoded[i] as char != 'e' {
-                    i += 1;
-                }
-                if i == encoded.len() {
-                    return Err("expected 'e' after number");
-                }
-                let number: &[u8] = &encoded[1..i];
-                let str_number: String = String::from_utf8_lossy(number).into_owned();
-                if let Ok(x) = str_number.parse::<i64>() {
-                    Ok((i, BNumber::new(x)))
-                } else {
-                    Err("expected correct i64 number")
-                }
-            },
-            _ => Err("expected 'i' before number")
+        if encoded.len() < 1 {
+            Err("empty string isn't valid BNumber")
+        } else {
+            match encoded[0] as char {
+                'i' => {
+                    let mut i : usize = 1;
+                    while i < encoded.len() && encoded[i] as char != 'e' {
+                        i += 1;
+                    }
+                    if i == encoded.len() {
+                        return Err("expected 'e' after number");
+                    }
+                    let number: &[u8] = &encoded[1..i];
+                    let str_number: String = String::from_utf8_lossy(number).into_owned();
+                    if let Ok(x) = str_number.parse::<i64>() {
+                        Ok((i, BNumber::new(x)))
+                    } else {
+                        Err("expected correct i64 number")
+                    }
+                },
+                _ => Err("expected 'i' before number")
+            }
         }
     }
 }
@@ -208,9 +216,82 @@ impl BElement<BString> for BString {
     }
 }
 
-#[test]
-fn test1_bnumber_parse() {
-    let (index, number) = BNumber::decode("i300e".as_bytes()).ok().expect("invalid"); 
-    assert_eq!(300, number.number);
-    assert_eq!(4, index);
+/// Simple test module.
+#[cfg(test)]
+mod tests {
+    extern crate rand;
+
+    use super::*;
+
+    fn test_bnumber(string: &[u8], index: usize, result: i64) {
+        let (ind, num) = BNumber::decode(string).ok().expect("invalid test");
+        assert_eq!(result, num.number);
+        assert_eq!(index, ind);
+    }
+
+    fn test_bnumber_invalid(string: &[u8], expected: &str) {
+        let error = BNumber::decode(string).err().expect("invalid test");
+        assert_eq!(expected, error);
+    }
+
+    #[test]
+    fn test1_bnumber_simple() {
+        test_bnumber("i300e".as_bytes(), 4, 300);
+    }
+
+    #[test]
+    fn test2_bnumber_negative() {
+        test_bnumber("i-23487e".as_bytes(), 7, -23487);
+    }
+
+    #[test]
+    fn test3_bnumber_invalid_format() {
+        test_bnumber_invalid("l487e".as_bytes(), "expected 'i' before number");
+    }
+
+    #[test]
+    fn test4_bnumber_invalid_format() {
+        test_bnumber_invalid("i487k".as_bytes(), "expected 'e' after number");
+    }
+
+    #[test]
+    fn test5_bnumber_invalid_number() {
+        test_bnumber_invalid("i-650-4e".as_bytes(), "expected correct i64 number");
+    }
+
+    #[test]
+    fn test6_bnumber_too_big_number() {
+        test_bnumber_invalid("i2398475629384765298346529384756293487562923452983e".as_bytes()
+                             , "expected correct i64 number");
+    }
+
+    #[test]
+    fn test7_bnumber_zero() {
+        test_bnumber("i0e".as_bytes(), 2, 0);
+    }
+
+    #[test]
+    fn test8_bnumer_empty_number() {
+        test_bnumber_invalid("ie".as_bytes(), "expected correct i64 number");
+    }
+
+    #[test]
+    fn test9_bnumer_too_short() {
+        test_bnumber_invalid("i".as_bytes(), "expected 'e' after number");
+    }
+
+    #[test]
+    fn test10_bnumer_even_shorter() {
+        test_bnumber_invalid("".as_bytes(), "empty string isn't valid BNumber");
+    }
+
+    #[test]
+    fn test11_bnumer_stress() {
+        for _ in 0..100000 {
+            let number: i64 = rand::random::<i64>();
+            let string: String = format!("i{}e", number);
+            test_bnumber(string.as_bytes(), string.len() - 1, number);
+        }
+    }
 }
+
