@@ -207,8 +207,12 @@ impl BElement<BString> for BString {
         } else {
             let length: &[u8] = &encoded[0..i];
             if let Ok(x) = String::from_utf8_lossy(length).into_owned().parse::<usize>() {
-                let value: &[u8] = &encoded[i + 1..i + x + 1];
-                Ok((i + x, BString::new(value)))
+                if i + x + 1 <= encoded.len() {
+                    let value: &[u8] = &encoded[i + 1..i + x + 1];
+                    Ok((i + x, BString::new(value)))
+                } else {
+                    Err("expected more bytes, but end was found")
+                }
             } else {
                 Err("expected correct usize number, representing length")
             }
@@ -218,7 +222,7 @@ impl BElement<BString> for BString {
 
 /// Simple test module.
 #[cfg(test)]
-mod tests {
+mod bnumber_tests {
     extern crate rand;
 
     use super::*;
@@ -295,3 +299,67 @@ mod tests {
     }
 }
 
+#[cfg(test)]
+mod bstring_tests {
+    use super::*;
+    fn test_bstring(string: &[u8], index: usize, result: String) {
+        let (ind, bstr) = BString::decode(string).ok().expect("invalid test");
+        assert_eq!(index, ind);
+        assert_eq!(result, bstr.data);
+    }
+
+    fn test_bstring_invalid(string: &[u8], expected: &str) {
+        let error = BString::decode(string).err().expect("invalid test");
+        assert_eq!(expected, error);
+    }
+
+    #[test]
+    fn test1_bstring_simple() {
+        test_bstring("3:abc".as_bytes(), 4, "abc".to_string());
+    }
+
+    #[test]
+    fn test2_bstring_short() {
+        test_bstring("1:a".as_bytes(), 2, "a".to_string());
+    }
+
+    #[test]
+    fn test3_bstring_even_shorter() {
+        test_bstring("0:".as_bytes(), 1, "".to_string());
+    }
+
+    #[test]
+    fn test4_bstring_digits() {
+        test_bstring("5:12345".as_bytes(), 6, "12345".to_string());
+    }
+
+    #[test]
+    fn test5_bstring_bad_symbols() {
+        test_bstring("14:!@#$%^&*()_+-=".as_bytes(), 16, "!@#$%^&*()_+-=".to_string());
+    }
+
+    #[test]
+    fn test6_bstring_empty() {
+        test_bstring_invalid("".as_bytes(), "expected :, but end was found");
+    }
+
+    #[test]
+    fn test7_bstring_bad_len() {
+        test_bstring_invalid("1:".as_bytes(), "expected more bytes, but end was found");
+    }
+
+    #[test]
+    fn test8_bstring_no_colon() {
+        test_bstring_invalid("128911".as_bytes(), "expected :, but end was found");
+    }
+
+    #[test]
+    fn test9_bstring_invalid_len() {
+        test_bstring_invalid("2a:a".as_bytes(), "expected correct usize number, representing length");
+    }
+
+    #[test]
+    fn test10_bstring_colon_first() {
+        test_bstring_invalid(":123".as_bytes(), "expected correct usize number, representing length");
+    }
+}
