@@ -3,6 +3,8 @@
 //! Contains all types of elements (`BNumber`, `BList`, `BDictionary`, `BString`), which
 //! have trait `BElement` with decoding functionality.
 
+use std::collections::HashMap;
+
 /// Trait for all bencode elements.
 ///
 /// Provides way to decode some type of element `T`, which must have trait `BElement`, from
@@ -161,45 +163,19 @@ impl BElement<BString> for BString {
         }
     }
 }
-/*
-struct BDictionary {
-    data: HashMap<&str, [u8]>,
+
+
+//TODO: something strange with lifetime here
+pub struct BDictionary<'a> {
+    data: &'a HashMap<&'a [u8], &'a [u8]>,
 }
 
-/// Basic equivalence relation.
-///
-/// Checks for equality simply using `BString`'s `data` field. Works exactly
-/// like equivalence in &[u8].
-impl PartialEq for BDictionary{
-    fn eq(&self, other: &Self) -> bool {
-        self.data == other.data
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        self.data != other.data
-    }
-}
-
-/// Guarantees to be reflexive.
-impl Eq for BDictionary {
-    
-}
-
-/// Simple `Debug` implementation.
-///
-/// Works just like `[u8]::fmt`.
-impl Debug for BDictionary {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        self.data.fmt(f)
-    }
-}
-
-impl BDictionary {
+impl<'a> BDictionary<'a> {
     /// Simple constructor from array of bytes.
-    pub fn new(data: &HashMap<&str, &str>) -> BString {
-        BString { data: data }
+    pub fn new(data: &'a HashMap<&'a [u8], &'a [u8]>) -> BDictionary<'a> {
+        BDictionary { data: data }
     }
-}*/
+}
 
 /// Simple test module.
 #[cfg(test)]

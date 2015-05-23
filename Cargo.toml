@@ -1,6 +1,6 @@
 [package]
 name = "bencode-decoder"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Daniyar Itegulov <wibkwibk@gmail.com>"]
 description = "A library for decoding data in Bencode format (e.g. torrent files)"
 repository = "https://github.com/itegulov/rust-bencode"
