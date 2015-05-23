@@ -1,0 +1,4 @@
+[package]
+name = "bencode"
+version = "0.0.1"
+authors = ["Daniyar Itegulov <wibkwibk@gmail.com>"]
