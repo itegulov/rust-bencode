@@ -3,10 +3,6 @@
 //! Contains all types of elements (`BNumber`, `BList`, `BDictionary`, `BString`), which
 //! have trait `BElement` with decoding functionality.
 
-use std::fmt::Formatter;
-use std::fmt::Debug;
-use std::fmt::Error;
-
 /// Trait for all bencode elements.
 ///
 /// Provides way to decode some type of element `T`, which must have trait `BElement`, from
@@ -17,7 +13,7 @@ use std::fmt::Error;
 /// Simple implementation.
 ///
 /// ```rust
-/// use bencode::BElement;
+/// use bencode_decoder::BElement;
 ///
 /// struct BExample {
 ///     e: i8,
@@ -38,6 +34,7 @@ pub trait BElement<T> where T: BElement<T> {
 }
 
 /// Struct for representing numbers in Bencode format.
+#[derive(Eq, PartialEq, Debug)]
 pub struct BNumber {
     /// Real number, represented by `BNumber`.
     number: i64,
@@ -47,34 +44,6 @@ impl BNumber {
     /// Simple constructor from one `i64`.
     pub fn new(number: i64) -> BNumber {
         BNumber { number: number }
-    }
-}
-
-/// Basic equivalence relation.
-///
-/// Checks for equality simply using `BNumber`'s `number` field. Works exactly
-/// like equivalence in i64.
-impl PartialEq for BNumber {
-    fn eq(&self, other: &Self) -> bool {
-        self.number == other.number
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        self.number != other.number
-    }
-}
-
-/// Guarantees to be reflexive.
-impl Eq for BNumber {
-    
-}
-
-/// Simple `Debug` implementation.
-///
-/// Works just like `i64::fmt`.
-impl Debug for BNumber {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        self.number.fmt(f)
     }
 }
 
@@ -89,8 +58,8 @@ impl BElement<BNumber> for BNumber {
     /// BNumber must begin with 'i' char and end with 'e' char.
     ///
     /// ```rust
-    /// use bencode::BElement;
-    /// use bencode::BNumber;
+    /// use bencode_decoder::BElement;
+    /// use bencode_decoder::BNumber;
     /// assert_eq!((4, BNumber::new(300)),
     ///                BNumber::decode("i300e".as_bytes()).ok().expect("invalid"));
     /// assert_eq!((5, BNumber::new(-204)),
@@ -100,16 +69,16 @@ impl BElement<BNumber> for BNumber {
     /// If it's not, then error is generated.
     ///
     /// ```rust
-    /// use bencode::BElement;
-    /// use bencode::BNumber;
+    /// use bencode_decoder::BElement;
+    /// use bencode_decoder::BNumber;
     /// assert!(BNumber::decode("l300e".as_bytes()).is_err());
     /// ```
     /// 
     /// Also error is generated, when number isn't valid or is too big for `i64`.
     /// 
     /// ```rust
-    /// use bencode::BElement;
-    /// use bencode::BNumber;
+    /// use bencode_decoder::BElement;
+    /// use bencode_decoder::BNumber;
     /// assert!(BNumber::decode("i400000000000000000000000000000000000000000000e".as_bytes()).is_err());
     /// ```
     fn decode(encoded: &[u8]) -> Result<(usize, BNumber), &'static str> {
@@ -140,37 +109,10 @@ impl BElement<BNumber> for BNumber {
 }
 
 /// Struct for representing string (byte sequence) in Bencode format.
+#[derive(Eq, PartialEq, Debug)]
 pub struct BString {
     /// Sequence of bytes, contained in this `BString`.
     data: String,
-}
-
-/// Basic equivalence relation.
-///
-/// Checks for equality simply using `BString`'s `data` field. Works exactly
-/// like equivalence in &[u8].
-impl PartialEq for BString {
-    fn eq(&self, other: &Self) -> bool {
-        self.data == other.data
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        self.data != other.data
-    }
-}
-
-/// Guarantees to be reflexive.
-impl Eq for BString {
-    
-}
-
-/// Simple `Debug` implementation.
-///
-/// Works just like `[u8]::fmt`.
-impl Debug for BString{
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        self.data.fmt(f)
-    }
 }
 
 impl BString {
@@ -191,8 +133,8 @@ impl BElement<BString> for BString {
     /// of bytes with corresponding length.
     ///
     /// ```
-    /// use bencode::BElement;
-    /// use bencode::BString;
+    /// use bencode_decoder::BElement;
+    /// use bencode_decoder::BString;
     ///
     /// assert_eq!((4, BString::new("abc".as_bytes())), 
     ///            BString::decode("3:abc".as_bytes()).ok().expect("invalid"));
@@ -219,6 +161,45 @@ impl BElement<BString> for BString {
         }
     }
 }
+/*
+struct BDictionary {
+    data: HashMap<&str, [u8]>,
+}
+
+/// Basic equivalence relation.
+///
+/// Checks for equality simply using `BString`'s `data` field. Works exactly
+/// like equivalence in &[u8].
+impl PartialEq for BDictionary{
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        self.data != other.data
+    }
+}
+
+/// Guarantees to be reflexive.
+impl Eq for BDictionary {
+    
+}
+
+/// Simple `Debug` implementation.
+///
+/// Works just like `[u8]::fmt`.
+impl Debug for BDictionary {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        self.data.fmt(f)
+    }
+}
+
+impl BDictionary {
+    /// Simple constructor from array of bytes.
+    pub fn new(data: &HashMap<&str, &str>) -> BString {
+        BString { data: data }
+    }
+}*/
 
 /// Simple test module.
 #[cfg(test)]
