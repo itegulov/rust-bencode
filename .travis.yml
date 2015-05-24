@@ -1,5 +1,10 @@
+env:
+  global:
+    - secure: LDyPRemj328KoJ5zObRlcm/8EuidneMeK5ay2yVTwi/B1jcXHhN1B7CKAsxEUJ/x0o1QlLnE/92lCMgRn5EzY9E6M/4XrfmHxOeETbf4TNXpF6A/+THfmiudFsnYPRSlurbM1O3nqHFOG1vWsAmk4UpD8dKg5eWD774IvyO4NTT0HUe+5+wTX+PGCCgO1vHV5/G+tYSmRiFOBUbZOW3VlrS1U8cWGGr+Tz1p4R3TTE5iHtQizHI3mq8pSUfX6T0TDd5M/IvDe+2nHzWnJmJDQ2J03PepbtAUXHm0k35YpaBq1uOoIrDTj8TtcxA8/GjBAyiHZqXKSHcQfcaVjYILaJG5eR/YU7jyyqx7z/lf8GVX67pS6Tu8qnETrugtTA22j9G1CBoq5XIi8G8x8cI6o+1grO9F45PopdLdAXNYaiGFAH0ggMannL8NCpPLb1JGxKIBIfluDnTpEe8fXpn2BrJVsMO2Fz2jIeS4qmXESpIazzAUx8azqCagbOv5Eo81+9vGzy3m4hHNqtAWk06LJTuJW4mbcu5EGgnbt6fNBCyAOrN3QmvAkhAUkAfG06F+YDFv5HyrLkX3wajf3LxIIvnD9b7ludTyEEqTtyR+5mENoT3imBkrIWMa60c/9B1EGZPpoaD62zIm0slwcKsFEwyUQsIND4OYf82jvoGE+Ak=
 language: rust
 script:
   - cargo build
   - cargo test
   - cargo doc --no-deps
+after_script:
+  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
