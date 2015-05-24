@@ -165,7 +165,7 @@ impl BElement<BString> for BString {
 }
 
 
-//TODO: something strange with lifetime here
+//FIXME: something strange with lifetime here
 pub struct BDictionary<'a> {
     data: &'a HashMap<&'a [u8], &'a [u8]>,
 }
@@ -176,7 +176,13 @@ impl<'a> BDictionary<'a> {
         BDictionary { data: data }
     }
 }
-
+/*
+impl<'a> BElement<BDictionary<'a>> for BDictionary<'a> {
+    pub fn decode<'b>(encoded: &'b [u8]) -> Result<(usize, BDictionary<'b>), &'static str> {
+        Err("kudah")
+    }
+}
+*/
 /// Simple test module.
 #[cfg(test)]
 mod bnumber_tests {
